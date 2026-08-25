@@ -1,26 +1,17 @@
-import path from 'path';
 import type { Core } from '@strapi/strapi';
 
 const config = ({ env }: Core.Config.Shared.ConfigParams): Core.Config.Database => {
-  // production (railway) passes DATABASE_URL -> postgres, local falls back to sqlite
-  if (env('DATABASE_URL')) {
-    return {
-      connection: {
-        client: 'postgres',
-        connection: {
-          connectionString: env('DATABASE_URL'),
-        },
-      },
-    } as Core.Config.Database;
-  }
-
+  // single postgres database (railway) for both local dev and production.
+  // local uses the public proxy url (DATABASE_SSL=true), railway uses the internal url.
   return {
     connection: {
-      client: 'sqlite',
+      client: 'postgres',
       connection: {
-        filename: path.join(__dirname, '..', '..', env('DATABASE_FILENAME', '.tmp/data.db')),
+        connectionString: env('DATABASE_URL'),
+        ssl: env.bool('DATABASE_SSL', false)
+          ? { rejectUnauthorized: false }
+          : false,
       },
-      useNullAsDefault: true,
     },
   } as Core.Config.Database;
 };
