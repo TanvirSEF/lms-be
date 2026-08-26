@@ -72,6 +72,23 @@ export default {
     ctx.body = { data: courses.map(toPublicCourse) };
   },
 
+  async manageList(ctx: Ctx) {
+    const filters =
+      ctx.state.user.userRole === 'instructor'
+        ? { instructor: ctx.state.user.id }
+        : {};
+
+    const courses = await courseDocuments().findMany({
+      filters,
+      populate: {
+        instructor: { fields: ['username'] },
+        lessons: { sort: { order: 'asc' } },
+      },
+      sort: { createdAt: 'desc' },
+    });
+    ctx.body = { data: courses };
+  },
+
   async findOne(ctx: Ctx) {
     const course = await findByDocumentId(ctx.params.documentId, coursePopulate);
 

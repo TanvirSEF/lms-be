@@ -1,20 +1,44 @@
-// import type { Core } from '@strapi/strapi';
+const authenticatedActions = [
+  'api::rbac.rbac.check',
+  'api::course.course.find',
+  'api::course.course.findOne',
+  'api::course.course.manageList',
+  'api::course.course.create',
+  'api::course.course.update',
+  'api::course.course.delete',
+  'api::lesson.lesson.create',
+  'api::lesson.lesson.update',
+  'api::lesson.lesson.delete',
+];
+
+async function grantAuthenticatedPermissions(strapi: any) {
+  const role = await strapi
+    .query('plugin::users-permissions.role')
+    .findOne({ where: { type: 'authenticated' } });
+
+  if (!role) {
+    return;
+  }
+
+  const permissions = await strapi
+    .query('plugin::users-permissions.permission')
+    .findMany({ where: { role: role.id } });
+
+  const existing = new Set(permissions.map((permission: any) => permission.action));
+
+  for (const action of authenticatedActions) {
+    if (!existing.has(action)) {
+      await strapi.query('plugin::users-permissions.permission').create({
+        data: { action, role: role.id },
+      });
+    }
+  }
+}
 
 export default {
-  /**
-   * An asynchronous register function that runs before
-   * your application is initialized.
-   *
-   * This gives you an opportunity to extend code.
-   */
-  register(/* { strapi }: { strapi: Core.Strapi } */) {},
+  register() {},
 
-  /**
-   * An asynchronous bootstrap function that runs before
-   * your application gets started.
-   *
-   * This gives you an opportunity to set up your data model,
-   * run jobs, or perform some special logic.
-   */
-  bootstrap(/* { strapi }: { strapi: Core.Strapi } */) {},
+  async bootstrap({ strapi }: { strapi: any }) {
+    await grantAuthenticatedPermissions(strapi);
+  },
 };

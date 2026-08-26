@@ -10,6 +10,14 @@ export default {
     },
     {
       method: 'GET',
+      path: '/courses/manage',
+      handler: 'course.manageList',
+      config: {
+        policies: [{ name: 'global::has-role', config: manageRoles }],
+      },
+    },
+    {
+      method: 'GET',
       path: '/courses/:documentId',
       handler: 'course.findOne',
       config: { auth: false },
