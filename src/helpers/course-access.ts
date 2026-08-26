@@ -55,7 +55,7 @@ export async function courseProgress(studentId: number, courseId: number) {
   const total = lessons.length;
 
   if (total === 0) {
-    return { total: 0, completed: 0, percent: 0 };
+    return { total: 0, completed: 0, percent: 0, completedLessonIds: [] as string[] };
   }
 
   const progresses = await docs('api::progress.lesson-progress').findMany({
@@ -64,9 +64,14 @@ export async function courseProgress(studentId: number, courseId: number) {
   });
 
   const lessonIds = new Set(lessons.map((lesson: any) => lesson.id));
-  const completed = progresses.filter(
+  const done = progresses.filter(
     (progress: any) => progress.lesson && lessonIds.has(progress.lesson.id)
-  ).length;
+  );
 
-  return { total, completed, percent: Math.round((completed / total) * 100) };
+  return {
+    total,
+    completed: done.length,
+    percent: Math.round((done.length / total) * 100),
+    completedLessonIds: done.map((progress: any) => progress.lesson.documentId),
+  };
 }

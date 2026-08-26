@@ -231,6 +231,7 @@ export default {
         total: attempt.total,
         createdAt: attempt.createdAt,
         quiz: {
+          documentId: attempt.quiz?.documentId ?? null,
           title: attempt.quiz?.title ?? null,
           course: attempt.quiz?.course
             ? { documentId: attempt.quiz.course.documentId, title: attempt.quiz.course.title }

@@ -85,6 +85,7 @@ export default {
       populate: {
         instructor: { fields: ['username'] },
         lessons: { sort: { order: 'asc' } },
+        quizzes: { populate: { questions: true } },
       },
       sort: { createdAt: 'desc' },
     });
@@ -155,6 +156,9 @@ export default {
       assertCourseManager(user, course);
     }
 
+    const progress =
+      user.userRole === 'student' ? await courseProgress(user.id, course.id) : null;
+
     ctx.body = {
       data: {
         documentId: course.documentId,
@@ -167,8 +171,8 @@ export default {
           title: quiz.title,
           questionCount: quiz.questions?.length ?? 0,
         })),
-        progress:
-          user.userRole === 'student' ? await courseProgress(user.id, course.id) : null,
+        progress,
+        completedLessonIds: progress?.completedLessonIds ?? [],
       },
     };
   },
