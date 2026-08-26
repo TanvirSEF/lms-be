@@ -1,5 +1,7 @@
 import { errors } from '@strapi/utils';
 
+import { assertCourseManager, courseProgress, isEnrolled } from '../../../helpers/course-access';
+
 type Ctx = {
   params: { documentId?: string };
   request: { body: Record<string, unknown> };
@@ -130,5 +132,44 @@ export default {
 
     await courseDocuments().delete({ documentId });
     ctx.body = { data: { documentId } };
+  },
+
+  async learn(ctx: Ctx) {
+    const course = (await findByDocumentId(ctx.params.documentId, {
+      instructor: { fields: ['username'] },
+      lessons: { sort: { order: 'asc' } },
+      quizzes: { populate: { questions: true } },
+    })) as unknown as Record<string, any> | null;
+
+    if (!course) {
+      throw new errors.NotFoundError('Course not found');
+    }
+
+    const user = ctx.state.user;
+
+    if (user.userRole === 'student') {
+      if (!(await isEnrolled(user.id, course.id))) {
+        throw new errors.ForbiddenError('Enroll in this course to access its lessons');
+      }
+    } else if (user.userRole === 'instructor') {
+      assertCourseManager(user, course);
+    }
+
+    ctx.body = {
+      data: {
+        documentId: course.documentId,
+        title: course.title,
+        description: course.description,
+        instructor: course.instructor ?? null,
+        lessons: course.lessons ?? [],
+        quizzes: (course.quizzes ?? []).map((quiz: any) => ({
+          documentId: quiz.documentId,
+          title: quiz.title,
+          questionCount: quiz.questions?.length ?? 0,
+        })),
+        progress:
+          user.userRole === 'student' ? await courseProgress(user.id, course.id) : null,
+      },
+    };
   },
 };

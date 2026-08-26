@@ -1,4 +1,5 @@
 const manageRoles = { roles: ['admin', 'content_manager', 'instructor'] };
+const allRoles = { roles: ['admin', 'content_manager', 'instructor', 'student'] };
 
 export default {
   routes: [
@@ -21,6 +22,14 @@ export default {
       path: '/courses/:documentId',
       handler: 'course.findOne',
       config: { auth: false },
+    },
+    {
+      method: 'GET',
+      path: '/courses/:documentId/learn',
+      handler: 'course.learn',
+      config: {
+        policies: [{ name: 'global::has-role', config: allRoles }],
+      },
     },
     {
       method: 'POST',

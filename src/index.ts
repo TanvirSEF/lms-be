@@ -9,6 +9,16 @@ const authenticatedActions = [
   'api::lesson.lesson.create',
   'api::lesson.lesson.update',
   'api::lesson.lesson.delete',
+  'api::course.course.learn',
+  'api::enrollment.enrollment.enroll',
+  'api::enrollment.enrollment.my',
+  'api::progress.lesson-progress.complete',
+  'api::quiz.quiz.create',
+  'api::quiz.quiz.update',
+  'api::quiz.quiz.delete',
+  'api::quiz.quiz.take',
+  'api::quiz.quiz.submit',
+  'api::quiz.quiz.attempts',
 ];
 
 async function grantAuthenticatedPermissions(strapi: any) {
