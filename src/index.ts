@@ -19,6 +19,13 @@ const authenticatedActions = [
   'api::quiz.quiz.take',
   'api::quiz.quiz.submit',
   'api::quiz.quiz.attempts',
+  'api::blog.blog-post.manageList',
+  'api::blog.blog-post.create',
+  'api::blog.blog-post.update',
+  'api::blog.blog-post.delete',
+  'api::admin.admin.stats',
+  'api::admin.admin.users',
+  'api::admin.admin.setRole',
 ];
 
 async function grantAuthenticatedPermissions(strapi: any) {
