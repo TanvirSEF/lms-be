@@ -26,6 +26,7 @@ const authenticatedActions = [
   'api::admin.admin.stats',
   'api::admin.admin.users',
   'api::admin.admin.setRole',
+  'plugin::upload.content-api.upload',
 ];
 
 async function grantAuthenticatedPermissions(strapi: any) {
