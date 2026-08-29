@@ -42,6 +42,7 @@ export default {
           documentId: enrollment.course.documentId,
           title: enrollment.course.title,
           description: enrollment.course.description,
+          coverUrl: enrollment.course.coverUrl,
           instructor: enrollment.course.instructor
             ? { username: enrollment.course.instructor.username }
             : null,
