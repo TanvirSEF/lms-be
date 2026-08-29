@@ -3,6 +3,7 @@ const authenticatedActions = [
   'api::course.course.find',
   'api::course.course.findOne',
   'api::course.course.manageList',
+  'api::course.course.instructors',
   'api::course.course.create',
   'api::course.course.update',
   'api::course.course.delete',

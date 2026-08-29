@@ -19,6 +19,14 @@ export default {
     },
     {
       method: 'GET',
+      path: '/courses/instructors',
+      handler: 'course.instructors',
+      config: {
+        policies: [{ name: 'global::has-role', config: manageRoles }],
+      },
+    },
+    {
+      method: 'GET',
       path: '/courses/:documentId',
       handler: 'course.findOne',
       config: { auth: false },

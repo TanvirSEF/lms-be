@@ -1,6 +1,11 @@
 import { errors } from '@strapi/utils';
 
-import { assertCourseManager, courseProgress, isEnrolled } from '../../../helpers/course-access';
+import {
+  assertCourseManager,
+  courseProgress,
+  docs,
+  isEnrolled,
+} from '../../../helpers/course-access';
 
 type Ctx = {
   params: { documentId?: string };
@@ -51,6 +56,43 @@ async function assertCanManage(ctx: Ctx, documentId: string) {
   }
 }
 
+async function assertValidInstructor(instructorId: unknown) {
+  const matches = await docs('plugin::users-permissions.user').findMany({
+    filters: { id: instructorId, userRole: 'instructor' },
+    limit: 1,
+  });
+
+  if (matches.length === 0) {
+    throw new errors.ValidationError('Selected user is not an instructor');
+  }
+
+  return (matches[0] as { id: number }).id;
+}
+
+async function applyInstructorAssignment(
+  ctx: Ctx,
+  data: Record<string, unknown>
+) {
+  if (ctx.state.user.userRole === 'instructor') {
+    data.instructor = ctx.state.user.id;
+    return;
+  }
+
+  const requested = data.instructor;
+
+  if (requested === undefined) {
+    delete data.instructor;
+    return;
+  }
+
+  if (requested === null || requested === '') {
+    data.instructor = null;
+    return;
+  }
+
+  data.instructor = await assertValidInstructor(requested);
+}
+
 const coursePopulate = {
   instructor: { fields: ['username'] },
   lessons: { sort: { order: 'asc' } },
@@ -72,6 +114,21 @@ export default {
       sort: { createdAt: 'desc' },
     });
     ctx.body = { data: courses.map(toPublicCourse) };
+  },
+
+  async instructors(ctx: Ctx) {
+    const instructors = await docs('plugin::users-permissions.user').findMany({
+      filters: { userRole: 'instructor' },
+      sort: { username: 'asc' },
+    });
+
+    ctx.body = {
+      data: instructors.map((user: any) => ({
+        id: user.id,
+        documentId: user.documentId,
+        username: user.username,
+      })),
+    };
   },
 
   async manageList(ctx: Ctx) {
@@ -105,9 +162,7 @@ export default {
   async create(ctx: Ctx) {
     const data = { ...ctx.request.body };
 
-    if (ctx.state.user.userRole === 'instructor') {
-      data.instructor = ctx.state.user.id;
-    }
+    await applyInstructorAssignment(ctx, data);
 
     const course = await courseDocuments().create({ data });
     ctx.body = { data: course };
@@ -119,9 +174,7 @@ export default {
 
     const data = { ...ctx.request.body };
 
-    if (ctx.state.user.userRole === 'instructor') {
-      delete data.instructor;
-    }
+    await applyInstructorAssignment(ctx, data);
 
     const course = await courseDocuments().update({ documentId, data });
     ctx.body = { data: course };
