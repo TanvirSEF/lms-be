@@ -40,6 +40,14 @@ export default {
       },
     },
     {
+      method: 'GET',
+      path: '/courses/:documentId/students',
+      handler: 'course.students',
+      config: {
+        policies: [{ name: 'global::has-role', config: manageRoles }],
+      },
+    },
+    {
       method: 'POST',
       path: '/courses',
       handler: 'course.create',

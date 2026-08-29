@@ -31,7 +31,9 @@ Custom endpoints enforce role and ownership checks in policies and controllers:
 | --- | --- |
 | `GET /api/courses`, `GET /api/courses/:documentId` | public, lesson content stripped |
 | `GET /api/courses/manage` | admin / CM (all) or instructor (own) |
-| `POST/PUT/DELETE /api/courses` | admin / CM / instructor, ownership checked |
+| `GET /api/courses/instructors` | admin / CM / instructor, users with the instructor role |
+| `POST/PUT/DELETE /api/courses` | admin / CM / instructor, ownership checked; admin / CM may assign any instructor, instructor is always self |
+| `GET /api/courses/:documentId/students` | admin / CM (all) or instructor (own): enrolled students with per-student progress |
 | `POST/PUT/DELETE /api/lessons` | same, ownership via parent course |
 | `GET /api/courses/:documentId/learn` | enrolled students, owner instructor, admin / CM |
 | `POST /api/enrollments/enroll` | student, blocks double enrollment |
@@ -45,6 +47,7 @@ Custom endpoints enforce role and ownership checks in policies and controllers:
 | `POST/PUT/DELETE /api/blogs`, `GET /api/blogs/manage` | admin / CM |
 | `GET /api/admin/stats` | admin |
 | `GET /api/admin/users`, `PUT /api/admin/users/:documentId/role` | admin, self role change blocked |
+| `POST /api/upload` | any authenticated user, images + lesson videos stored on Cloudinary |
 
 ## Run locally
 

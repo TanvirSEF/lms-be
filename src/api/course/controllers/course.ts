@@ -188,6 +188,77 @@ export default {
     ctx.body = { data: { documentId } };
   },
 
+  async students(ctx: Ctx) {
+    const course = (await findByDocumentId(ctx.params.documentId, {
+      instructor: true,
+      lessons: true,
+    })) as unknown as Record<string, any> | null;
+
+    if (!course) {
+      throw new errors.NotFoundError('Course not found');
+    }
+
+    assertCourseManager(ctx.state.user, course);
+
+    const lessons = (course.lessons as { id: number }[]) ?? [];
+    const lessonIds = lessons.map((lesson) => lesson.id);
+
+    const enrollments = await docs('api::enrollment.enrollment').findMany({
+      filters: { course: course.id },
+      populate: { student: { fields: ['username'] } },
+      sort: { createdAt: 'asc' },
+    });
+
+    const progresses = lessonIds.length
+      ? await docs('api::progress.lesson-progress').findMany({
+          filters: { lesson: { id: { $in: lessonIds } } },
+          populate: { student: true, lesson: true },
+        })
+      : [];
+
+    const completedByStudent = new Map<number, Set<number>>();
+    for (const progress of progresses as { student?: { id: number }; lesson?: { id: number } }[]) {
+      const studentId = progress.student?.id;
+      const lessonId = progress.lesson?.id;
+
+      if (studentId === undefined || lessonId === undefined) {
+        continue;
+      }
+
+      const done = completedByStudent.get(studentId) ?? new Set<number>();
+      done.add(lessonId);
+      completedByStudent.set(studentId, done);
+    }
+
+    const total = lessons.length;
+
+    ctx.body = {
+      data: {
+        total,
+        students: (
+          enrollments as {
+            documentId: string;
+            createdAt: string;
+            student?: { id?: number; username?: string };
+          }[]
+        ).map((enrollment) => {
+          const completed =
+            (enrollment.student?.id !== undefined &&
+              completedByStudent.get(enrollment.student.id)?.size) ||
+            0;
+
+          return {
+            documentId: enrollment.documentId,
+            username: enrollment.student?.username ?? 'Unknown',
+            enrolledAt: enrollment.createdAt,
+            completed,
+            percent: total === 0 ? 0 : Math.round((completed / total) * 100),
+          };
+        }),
+      },
+    };
+  },
+
   async learn(ctx: Ctx) {
     const course = (await findByDocumentId(ctx.params.documentId, {
       instructor: { fields: ['username'] },

@@ -11,6 +11,7 @@ const authenticatedActions = [
   'api::lesson.lesson.update',
   'api::lesson.lesson.delete',
   'api::course.course.learn',
+  'api::course.course.students',
   'api::enrollment.enrollment.enroll',
   'api::enrollment.enrollment.my',
   'api::progress.lesson-progress.complete',
